@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aegis — The Last Bot You'll Ever Add</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #080b10;
+    --bg2: #0d1117;
+    --bg3: #111820;
+    --border: rgba(255,255,255,0.06);
+    --accent: #4f8ef7;
+    --accent2: #7c5cfc;
+    --accent3: #00e5c4;
+    --text: #e8edf5;
+    --muted: #6b7a94;
+    --card: rgba(255,255,255,0.03);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  /* ── Noise overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* ── Grid background ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(79,142,247,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,142,247,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Nav ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: rgba(8,11,16,0.85);
+    backdrop-filter: blur(20px);
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .nav-logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--text); }
+
+  .btn-nav {
+    background: var(--accent);
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    text-decoration: none;
+    transition: opacity 0.2s, transform 0.2s;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-nav:hover { opacity: 0.85; transform: translateY(-1px); color: #fff; }
+
+  /* ── Hero ── */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 120px 40px 80px;
+    z-index: 1;
+    overflow: hidden;
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(79,142,247,0.12) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .hero-glow2 {
+    position: absolute;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(124,92,252,0.08) 0%, transparent 70%);
+    top: 30%; left: 30%;
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(79,142,247,0.1);
+    border: 1px solid rgba(79,142,247,0.2);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .hero-badge-dot {
+    width: 6px; height: 6px;
+    background: var(--accent3);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(48px, 8vw, 96px);
+    line-height: 0.95;
+    letter-spacing: -3px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s ease 0.1s both;
+  }
+
+  h1 .line1 { display: block; color: var(--text); }
+  h1 .line2 {
+    display: block;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 480px;
+    margin: 0 auto 48px;
+    line-height: 1.7;
+    animation: fadeUp 0.6s ease 0.2s both;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeUp 0.6s ease 0.3s both;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    padding: 14px 32px;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 0 40px rgba(79,142,247,0.3);
+    letter-spacing: 0.3px;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 60px rgba(79,142,247,0.4);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    padding: 14px 32px;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .btn-ghost:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+
+  .hero-stats {
+    display: flex;
+    gap: 48px;
+    justify-content: center;
+    margin-top: 80px;
+    padding-top: 48px;
+    border-top: 1px solid var(--border);
+    animation: fadeUp 0.6s ease 0.4s both;
+    flex-wrap: wrap;
+    gap: 32px;
+  }
+
+  .stat { text-align: center; }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 36px;
+    letter-spacing: -1px;
+    background: linear-gradient(90deg, var(--text), var(--muted));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+  /* ── Section common ── */
+  section {
+    position: relative;
+    z-index: 1;
+    padding: 100px 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-tag {
+    font-size: 11px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(32px, 4vw, 52px);
+    letter-spacing: -1.5px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .section-sub {
+    color: var(--muted);
+    font-size: 15px;
+    max-width: 500px;
+    line-height: 1.7;
+    margin-bottom: 60px;
+  }
+
+  /* ── Features ── */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .feature-card {
+    background: var(--bg2);
+    padding: 32px;
+    transition: background 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .feature-card:hover { background: var(--bg3); }
+  .feature-card:hover::before { opacity: 1; }
+
+  .feature-icon {
+    font-size: 28px;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .feature-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+
+  .feature-desc { color: var(--muted); font-size: 13px; line-height: 1.7; }
+
+  /* ── Commands ── */
+  .commands-section { background: var(--bg2); border-radius: 0; padding: 100px 0; max-width: none; }
+  .commands-inner { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
+
+  .commands-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 8px;
+    margin-top: 48px;
+  }
+
+  .cmd-pill {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .cmd-pill:hover { border-color: rgba(79,142,247,0.3); transform: translateX(2px); }
+
+  .cmd-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+  }
+
+  .cmd-desc { font-size: 11px; color: var(--muted); }
+
+  /* ── Pricing ── */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-top: 48px;
+  }
+
+  .pricing-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px;
+    position: relative;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+
+  .pricing-card:hover { transform: translateY(-4px); }
+
+  .pricing-card.featured {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(79,142,247,0.05), rgba(124,92,252,0.05));
+  }
+
+  .pricing-card.featured::before {
+    content: 'MOST POPULAR';
+    position: absolute;
+    top: -12px; left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    color: #fff;
+    font-size: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    padding: 4px 14px;
+    border-radius: 100px;
+  }
+
+  .price-tier { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+
+  .price-amount {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 48px;
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .price-amount span { font-size: 20px; letter-spacing: -0.5px; vertical-align: super; }
+  .price-period { font-size: 12px; color: var(--muted); margin-bottom: 28px; }
+
+  .price-features { list-style: none; margin-bottom: 32px; }
+  .price-features li {
+    font-size: 13px;
+    color: var(--muted);
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .price-features li::before { content: '—'; color: var(--accent); font-weight: bold; }
+  .price-features li.included { color: var(--text); }
+  .price-features li.included::before { content: '✓'; color: var(--accent3); }
+
+  .btn-tier {
+    display: block;
+    text-align: center;
+    padding: 12px;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration: none;
+    transition: transform 0.2s, opacity 0.2s;
+  }
+
+  .btn-tier-outline { border: 1px solid var(--border); color: var(--muted); }
+  .btn-tier-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-tier-filled { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+  .btn-tier-filled:hover { opacity: 0.85; transform: translateY(-1px); }
+
+  /* ── CTA ── */
+  .cta-section {
+    text-align: center;
+    padding: 120px 40px;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+  }
+
+  .cta-glow {
+    position: absolute;
+    width: 800px; height: 400px;
+    background: radial-gradient(ellipse, rgba(79,142,247,0.08) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .cta-section h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(36px, 5vw, 64px);
+    letter-spacing: -2px;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  .cta-section p { color: var(--muted); font-size: 15px; margin-bottom: 40px; }
+
+  /* ── Footer ── */
+  footer {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 32px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .footer-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--muted);
+  }
+
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a { color: var(--muted); text-decoration: none; font-size: 12px; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--text); }
+
+  .footer-copy { font-size: 12px; color: var(--muted); }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── Divider ── */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (max-width: 600px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    section { padding: 60px 20px; }
+    .hero { padding: 100px 20px 60px; }
+    .hero-stats { gap: 24px; }
+    footer { padding: 24px 20px; flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-icon">⚔️</div>
+    Aegis
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#commands">Commands</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+  </ul>
+  <a href="https://discord.com/oauth2/authorize?client_id=1510193071126609990&permissions=8&scope=bot%20applications.commands" class="btn-nav" target="_blank">Add to Discord</a>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
+
+  <div class="hero-badge">
+    <div class="hero-badge-dot"></div>
+    Now Live
+  </div>
+
+  <h1>
+    <span class="line1">One Bot.</span>
+    <span class="line2">Everything.</span>
+  </h1>
+
+  <p class="hero-sub">
+    Aegis replaces MEE6, Dyno, Carl-bot, and your music bot — all in one.
+    Moderation, levelling, tickets, music, giveaways, and more.
+  </p>
+
+  <div class="hero-actions">
+    <a href="https://discord.com/oauth2/authorize?client_id=1510193071126609990&permissions=8&scope=bot%20applications.commands" class="btn-primary" target="_blank">
+      Add Aegis Free →
+    </a>
+    <a href="#features" class="btn-ghost">See Features</a>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num">27+</div>
+      <div class="stat-label">Commands</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">8</div>
+      <div class="stat-label">Modules</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">Free</div>
+      <div class="stat-label">To Start</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">24/7</div>
+      <div class="stat-label">Uptime</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Features -->
+<section id="features">
+  <div class="section-tag reveal">// Features</div>
+  <h2 class="section-title reveal">Built for gaming communities.<br>Designed to replace everything.</h2>
+  <p class="section-sub reveal">Stop paying for three bots. Aegis has everything your server needs in one place.</p>
+
+  <div class="features-grid reveal">
+    <div class="feature-card">
+      <span class="feature-icon">🛡️</span>
+      <div class="feature-title">Moderation</div>
+      <div class="feature-desc">Warn, mute, kick, ban, case history, automod for spam and invites. Full audit log to a dedicated channel.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">⭐</span>
+      <div class="feature-title">Levelling & XP</div>
+      <div class="feature-desc">MEE6-compatible XP system with rank cards, leaderboard, level roles, and configurable cooldowns.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎫</span>
+      <div class="feature-title">Tickets</div>
+      <div class="feature-desc">Private thread tickets with categories, staff claiming, transcripts, and a one-click panel.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎵</span>
+      <div class="feature-title">Music</div>
+      <div class="feature-desc">YouTube and Spotify playback with queues, shuffle, loop, volume control, and now playing embeds.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎉</span>
+      <div class="feature-title">Giveaways</div>
+      <div class="feature-desc">Timed giveaways with role requirements, entry buttons, winner selection, and reroll support.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📊</span>
+      <div class="feature-title">Polls</div>
+      <div class="feature-desc">Live voting polls with up to 10 options, real-time bar charts, and optional end timers.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎭</span>
+      <div class="feature-title">Reaction Roles</div>
+      <div class="feature-desc">Button and dropdown role menus with exclusive mode, unlimited roles, and persistent panels.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📋</span>
+      <div class="feature-title">Applications</div>
+      <div class="feature-desc">Multi-question application forms with staff review panels, approve/deny flows, and auto role grants.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">👋</span>
+      <div class="feature-title">Welcome System</div>
+      <div class="feature-desc">Configurable join/leave messages, DM welcomes, auto join roles, and member count channels.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Commands -->
+<div class="commands-section">
+  <div class="commands-inner">
+    <div class="section-tag reveal">// Commands</div>
+    <h2 class="section-title reveal">Every command you need.</h2>
+    <p class="section-sub reveal">Slash commands across 8 categories. No prefix needed.</p>
+
+    <div class="commands-grid reveal">
+      <div class="cmd-pill"><div><div class="cmd-name">/warn</div><div class="cmd-desc">Issue a warning</div></div></div>
+      <div class="cmd-pill"><div><div class="cmd-name">/mute</div><div class="cmd-desc">Timeout a member</div></div></div>
+      <div class="cmd-pill"><div><div class="cmd-name">/ban</div><div class="cmd-desc">Ban a user</div></div></div>
+      <div class="cmd-pill"><div><div class="cmd-name">/history</div><div class="cmd-desc">View mod cases</div></div></div>
+      <div class="cmd-pill"><div><div class="cmd-name">/purge</div><div class="cmd-desc">Bulk delete messages</div></div></div>
+      <div class="cmd-pill"><div><div class="cmd-name">/rank</div><div class="cmd-desc">View your rank card</div></div></div>
+      <div class="cmd-pill"><div><div class="cmd-name">/leaderboard</div><div class="cmd-desc">Top XP leaderboard</div></div></div>
+      <div class="cmd-pill"><div><div class="cmd-name">/play</div><div class="cmd-desc">Play music</div></div></div>
+      <div class="cmd-pill"><div><div class="cmd-name">/queue</div><div class="cmd-desc">View the queue</div></div></div>
+      <div class="cmd-pill"><div><div class="cmd-name">/skip</div><div class="cmd-desc">Skip current track</div></div></div>
+      <div class="cmd-pill"><div><div class="cmd-name">/loop</div><div class="cmd-desc">Loop track or queue</div></div></div>
+      <div class="cmd-pill"><div><div class="cmd-name">/shuffle</div><div class="cmd-desc">Shuffle the queue</div></div></div>
+      <div class="cmd-pill"><div><div class="cmd-name">/ticket panel</div><div class="cmd-desc">Post ticket button</div></div></div>
+      <div class="cmd-pill"><div><div class="cmd-name">/rolemenu</div><div class="cmd-desc">Create role menus</div></div></div>
+      <div class="cmd-pill"><div><div class="cmd-name">/giveaway start</div><div class="cmd-desc">Start a giveaway</div></div></div>
+      <div class="cmd-pill"><div><div class="cmd-name">/poll create</div><div class="cmd-desc">Create a live poll</div></div></div>
+      <div class="cmd-pill"><div><div class="cmd-name">/application</div><div class="cmd-desc">Application forms</div></div></div>
+      <div class="cmd-pill"><div><div class="cmd-name">/stats</div><div class="cmd-desc">Server statistics</div></div></div>
+      <div class="cmd-pill"><div><div class="cmd-name">/customcmd</div><div class="cmd-desc">Custom tag commands</div></div></div>
+      <div class="cmd-pill"><div><div class="cmd-name">/config</div><div class="cmd-desc">Configure Aegis</div></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- Pricing -->
+<section id="pricing">
+  <div class="section-tag reveal">// Pricing</div>
+  <h2 class="section-title reveal">Less than one bot subscription.</h2>
+  <p class="section-sub reveal">MEE6 + Dyno + Carl-bot costs $16/mo. Aegis costs less and does more.</p>
+
+  <div class="pricing-grid reveal">
+    <div class="pricing-card">
+      <div class="price-tier">Free</div>
+      <div class="price-amount">$0</div>
+      <div class="price-period">forever</div>
+      <ul class="price-features">
+        <li class="included">All moderation commands</li>
+        <li class="included">Levelling & XP system</li>
+        <li class="included">Music playback</li>
+        <li class="included">Up to 5 reaction role menus</li>
+        <li class="included">Up to 3 ticket categories</li>
+        <li>Unlimited role menus</li>
+        <li>Application forms</li>
+        <li>Giveaways & polls</li>
+      </ul>
+      <a href="https://discord.com/oauth2/authorize?client_id=1510193071126609990&permissions=8&scope=bot%20applications.commands" class="btn-tier btn-tier-outline" target="_blank">Add Free</a>
+    </div>
+
+    <div class="pricing-card featured">
+      <div class="price-tier">Pro</div>
+      <div class="price-amount"><span>$</span>9</div>
+      <div class="price-period">per server / month</div>
+      <ul class="price-features">
+        <li class="included">Everything in Free</li>
+        <li class="included">Unlimited reaction role menus</li>
+        <li class="included">Unlimited ticket categories</li>
+        <li class="included">Application forms</li>
+        <li class="included">Giveaways & polls</li>
+        <li class="included">Unlimited custom commands</li>
+        <li class="included">Scheduled messages</li>
+        <li class="included">Priority support</li>
+      </ul>
+      <a href="https://discord.com/oauth2/authorize?client_id=1510193071126609990&permissions=8&scope=bot%20applications.commands" class="btn-tier btn-tier-filled" target="_blank">Get Pro</a>
+    </div>
+
+    <div class="pricing-card">
+      <div class="price-tier">Business</div>
+      <div class="price-amount"><span>$</span>19</div>
+      <div class="price-period">per month · up to 5 servers</div>
+      <ul class="price-features">
+        <li class="included">Everything in Pro</li>
+        <li class="included">Up to 5 servers</li>
+        <li class="included">1 year audit log</li>
+        <li class="included">SLA ticket tracking</li>
+        <li class="included">12hr priority support</li>
+        <li class="included">Early access to features</li>
+        <li class="included">Custom bot name on request</li>
+        <li class="included">Dedicated support channel</li>
+      </ul>
+      <a href="https://discord.com/oauth2/authorize?client_id=1510193071126609990&permissions=8&scope=bot%20applications.commands" class="btn-tier btn-tier-outline" target="_blank">Get Business</a>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div class="cta-glow"></div>
+  <div class="section-tag reveal">// Get Started</div>
+  <h2 class="reveal">Add Aegis.<br>Cancel the rest.</h2>
+  <p class="reveal">Free forever. No credit card. One click to add.</p>
+  <div class="reveal">
+    <a href="https://discord.com/oauth2/authorize?client_id=1510193071126609990&permissions=8&scope=bot%20applications.commands" class="btn-primary" target="_blank" style="display:inline-block">
+      Add to Discord — It's Free →
+    </a>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-logo">⚔️ Aegis</div>
+  <div class="footer-links">
+    <a href="#features">Features</a>
+    <a href="#commands">Commands</a>
+    <a href="#pricing">Pricing</a>
+    <a href="https://discord.com/oauth2/authorize?client_id=1510193071126609990&permissions=8&scope=bot%20applications.commands" target="_blank">Invite</a>
+  </div>
+  <div class="footer-copy">© 2026 Aegis. All rights reserved.</div>
+</footer>
+
+<script>
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(el => {
+      if (el.isIntersecting) {
+        el.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
